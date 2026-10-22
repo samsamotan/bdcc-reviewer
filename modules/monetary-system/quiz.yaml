@@ -492,7 +492,7 @@ templates:
     prompt: Match each forecasting approach to its idea.
     pairs:
       - ['[[efficient-market|Efficient market]]', 'Prices already reflect all relevant information']
-      - ['[[random-walk|Random walk]]', 'The best prediction of tomorrow is today']
+      - ['[[random-walk-hypothesis|Random walk]]', 'The best prediction of tomorrow is today']
       - ['[[fundamental-approach|Fundamental approach]]', 'Models of inflation, interest rates and trade']
       - ['[[technical-analysis|Technical analysis]]', 'Past price trends projected forward']
     hints:

@@ -53,6 +53,24 @@ test('dashboard, glossary, cheatsheet and settings render', async ({ page }) => 
   expect(errors).toEqual([]);
 });
 
+test('glossary notes: old ?term= links redirect, links open notes, graph mode renders', async ({ page }) => {
+  const errors = collectErrors(page);
+  const mod = await loadModule(page, modules[0]);
+  const t = mod.glossary.find((x) => x.related?.length)!;
+  await page.goto(`/glossary?term=${t.id}`);
+  await expect(page).toHaveURL(new RegExp(`/glossary/${t.id}$`));
+  const note = page.getByTestId('glossary-note');
+  await expect(note.getByRole('heading', { level: 2 })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('img', { name: /Terms linked to/ })).toBeVisible();
+  // a link chip opens that term's note
+  await note.locator(`a[href="/glossary/${t.related![0]}"]`).first().click();
+  await expect(page).toHaveURL(new RegExp(`/glossary/${t.related![0]}$`));
+  await page.getByRole('tab', { name: 'Graph' }).click();
+  await expect(page).toHaveURL(/\/glossary\/graph$/);
+  await expect(page.getByRole('img', { name: /Graph of \d+ glossary terms/ })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('every scene plays through every beat', async ({ page }) => {
   const errors = collectErrors(page);
   for (const id of modules) {

@@ -864,6 +864,14 @@ export function lintModule(mod: ParsedModule): Issue[] {
   if (!mod.application.tradeoffs) w('application.yaml', 'no tradeoffs table');
   mod.glossary.forEach((t, i) => limit(t.short, 25, 'glossary.yaml', `terms[${i}].short`, `glossary "${t.id}" short`));
   if (mod.glossary.length < 10) w('glossary.yaml', `${mod.glossary.length} terms (guide: typically 10–25)`);
+  // a term with no links either way is a lone dot in the glossary graph (guide §5.6)
+  const linkedTerms = new Set<string>();
+  mod.glossary.forEach((t) => {
+    const to = [...(t.related ?? []), ...collectTermLinks(t.long).map((l) => l.id)];
+    if (to.length) linkedTerms.add(t.id);
+    to.forEach((r) => linkedTerms.add(r));
+  });
+  mod.glossary.forEach((t, i) => { if (!linkedTerms.has(t.id)) w('glossary.yaml', `term "${t.id}" is not linked to any other term (add 2–5 \`related\` ids so it joins the glossary graph)`, `terms[${i}]`); });
   const q = mod.quiz;
   if (q.length < 25) w('quiz.yaml', `${q.length} templates (guide: ≥ 25)`);
   q.forEach((t, i) => limit(t.explanation, 120, 'quiz.yaml', `templates[${i}].explanation`, 'explanation'));

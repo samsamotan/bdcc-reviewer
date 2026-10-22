@@ -1,0 +1,535 @@
+scenes:
+  - id: how-music-is-sold
+    title: How music is sold
+    goal: How did people pay for music before, and how is it changing?
+    skills: [music-economics]
+    data: [usformats]
+    state: { year: '2013' }
+    derive:
+      - { fn: formatShares, in: { table: '@usformats', year: '@year' }, out: f }
+    stage:
+      - id: labels-note
+        widget: Callout
+        props:
+          kind: note
+          title: How recorded music was sold
+          body: |
+            - **Record labels:** Sign artists, fund recordings and advances, and hold the master rights.
+            - **Major vs. independent labels:** Universal, Sony and Warner (>80% of US sales) vs. independents like Big Machine Records.
+            - **Physical & digital downloads:** CDs/vinyl and iTunes downloads (where the retailer kept **30%** and the label received **70%**).
+      - id: format-chart
+        widget: Chart
+        hidden: true
+        props:
+          kind: line
+          title: US recorded music revenue by format ($M)
+          xLabel: Year
+          yLabel: US revenue ($M)
+          series:
+            - { name: Physical, x: ['2010', '2011', '2012', '2013'], y: [3392, 3105, 2489, 2126] }
+            - { name: Downloads, x: ['2010', '2011', '2012', '2013'], y: [2208, 2593, 2829, 2800] }
+            - { name: Streaming, x: ['2010', '2011', '2012', '2013'], y: [461, 540, 862, 1283] }
+      - id: r-in
+        widget: Readout
+        hidden: true
+        props:
+          items:
+            - { label: Physical (millions), value: '@f.physical' }
+            - { label: Downloads (millions), value: '@f.downloads' }
+            - { label: Streaming (millions), value: '@f.streaming' }
+      - id: r
+        widget: Readout
+        region: side
+        hidden: true
+        props:
+          items:
+            - { label: Physical (millions), value: '@f.physical' }
+            - { label: Downloads (millions), value: '@f.downloads' }
+            - { label: Streaming (millions), value: '@f.streaming' }
+            - { label: Total (millions), value: '@f.total', tone: accent }
+            - { label: Streaming share, value: '{=f.share|pct1}', tone: good }
+      - id: yearpick
+        widget: Choice
+        region: side
+        hidden: true
+        props:
+          label: Year
+          style: segmented
+          options:
+            - { value: '2010', label: '2010' }
+            - { value: '2011', label: '2011' }
+            - { value: '2012', label: '2012' }
+            - { value: '2013', label: '2013' }
+        bind: { value: year }
+    beats:
+      - say: |
+          Most artists make records under contract with a **record label**: a company that signs them, makes and promotes
+          their records, and usually owns the recordings. Labels pay artists an advance and a share of sales.
+        define: [record-label]
+      - say: |
+          Three **major labels**, Universal, Sony and Warner, made over 80% of US recorded music sales.
+          An **independent label** is a smaller company outside the three, such as Big Machine Records, which sells through a major's network.
+        define: [major-label, independent-label]
+      - say: |
+          For decades music was sold as **physical sales**: CDs and records. Then came the **digital download**, a song or
+          album you buy as a file, and the iTunes store with it. The retailer kept 30% and the label got 70%.
+        define: [physical-sales, digital-download]
+      - say: |
+          Newer is **streaming**: listening online without owning the file. Alongside it, **piracy**, copying and sharing
+          music without paying, had already cut sales. Add up the three formats for 2013.
+        define: [streaming, piracy]
+        hide: [labels-note]
+        show: [r-in]
+        gate:
+          type: predict
+          question: In 2013, US physical sales were 2,126 million, downloads 2,800 million and streaming 1,283 million. What was the total (millions)?
+          answer: { value: 6209, tol: 0.5 }
+          explain: 2,126 + 2,800 + 1,283 = 6,209 million dollars.
+      - say: |
+          In 2013 streaming already made up 20.7% of the 6,209 million total. Use the Year buttons to inspect how small
+          streaming was when the shift began.
+        hide: [r-in]
+        show: [format-chart, r, yearpick]
+        gate:
+          type: when
+          prompt: Find the year in which streaming accounted for less than 8% of US recorded music revenue.
+          when: 'f.share < 0.08'
+          hint: Compare the Streaming share across the earlier years.
+      - say: Try a different year.
+        hide: [yearpick]
+        gate:
+          type: practice
+          template: format-share-numeric
+    takeaway: Music moved from CDs and downloads toward streaming, which rose from about 8% to about 21% of US revenue in three years.
+
+  - id: reading-growth
+    title: Reading growth in numbers
+    goal: How do you tell how fast a company is growing, and whether that is good news?
+    skills: [growth-metrics]
+    data: [financials]
+    state: { before: 430, after: 747 }
+    derive:
+      - { fn: growthPct, in: { before: '@before', after: '@after' }, out: g }
+    stage:
+      - id: r-in
+        widget: Readout
+        props:
+          items:
+            - { label: 2012 revenue (millions of euros), value: '@before' }
+            - { label: 2013 revenue (millions of euros), value: '@after' }
+      - id: r
+        widget: Readout
+        hidden: true
+        props:
+          items:
+            - { label: Before, value: '@before' }
+            - { label: After, value: '@after' }
+            - { label: Change, value: '@g.change', tone: accent }
+            - { label: Percent change, value: '{=g.pct|pct1}', tone: good }
+      - id: aft
+        widget: Slider
+        region: side
+        hidden: true
+        props: { label: Revenue after, min: 430, max: 900, step: 10 }
+        bind: { value: after }
+      - id: fin-note
+        widget: Callout
+        hidden: true
+        props:
+          kind: note
+          title: Spotify financials (2012 vs. 2013)
+          body: |
+            - **Revenue:** €430M in 2012 → €747M in 2013 (**+73.7%**)
+            - **Operating result (loss):** −€80M in 2012 → −€93M in 2013 (**loss grew by 16.3%**)
+    beats:
+      - say: |
+          **Revenue** is the money a company takes in before costs are taken out. Spotify's was about 430 million euros in
+          2012 and 747 million in 2013. Its **operating result** is revenue minus the costs of running the business, and it was
+          negative both years: a loss.
+        define: [revenue, operating-result]
+      - say: |
+          A fair way to measure growth is **percentage change**: how much a number changed, as a share of where it started.
+          Estimate Spotify's revenue growth from 2012 to 2013.
+        define: [percentage-change]
+        gate:
+          type: predict
+          question: What was the percentage change in revenue from 430 to 747? (Enter a decimal like 0.737 or a percentage like 73.7%.)
+          answer: { value: 0.737, tol: 0.005, percent: true }
+          explain: (747 − 430) ÷ 430 = 0.737, about 73.7%.
+      - say: |
+          Revenue rose by 317 million euros, or 73.7%. Now explore how high 2013 revenue would have needed to be to double
+          2012 revenue.
+        hide: [r-in]
+        show: [r, aft]
+        gate:
+          type: when
+          prompt: Raise the later revenue until revenue has doubled (a 100% change).
+          when: 'g.pct > 0.99'
+          hint: Doubling 430 gives 860.
+      - say: Try one on new numbers.
+        set: { after: 747 }
+        hide: [aft]
+        gate:
+          type: practice
+          template: growth-pct-numeric
+      - say: Something to think about.
+        show: [fin-note]
+        gate:
+          type: reflect
+          prompt: Spotify's revenue grew 74% in 2013, yet its operating loss grew by about 16%. Is that good or bad news?
+          model: |
+            Both are true. Fast revenue growth shows demand, but a growing loss means costs, mainly royalties, rose even faster.
+            Investors would want to see revenue grow faster than costs so the loss shrinks over time.
+    takeaway: Percentage change divides the change by the starting value, and growth and profit can move in different ways.
+
+  - id: how-spotify-earns
+    title: How Spotify earns its money
+    goal: How can a service give music away for free and still make money?
+    skills: [business-model]
+    state: { part: 12.5, whole: 50, subscribers: 12.5, price: 9.99, months: 12, animFrom: 0, animTo: 0.8 }
+    derive:
+      - { fn: shareOf, in: { part: '@part', whole: '@whole' }, out: s }
+      - { fn: subscriptionRevenue, in: { subscribers: '@subscribers', price: '@price', months: '@months' }, out: v }
+    stage:
+      - id: r1-in
+        widget: Readout
+        props:
+          items:
+            - { label: Paying (millions), value: '@part' }
+            - { label: Active (millions), value: '@whole' }
+      - id: r1
+        widget: Readout
+        hidden: true
+        props:
+          items:
+            - { label: Paying (millions), value: '@part' }
+            - { label: Active (millions), value: '@whole' }
+            - { label: Share paying, value: '{=s.share|pct1}', tone: good }
+      - id: r2-in
+        widget: Readout
+        hidden: true
+        props:
+          items:
+            - { label: Subscribers (millions), value: '@subscribers' }
+            - { label: Monthly price (dollars), value: '@price' }
+            - { label: Months, value: '@months' }
+      - id: r2
+        widget: Readout
+        hidden: true
+        props:
+          items:
+            - { label: Subscribers (millions), value: '@subscribers' }
+            - { label: Monthly price (dollars), value: '@price' }
+            - { label: Revenue (millions of dollars), value: '@v.revenue', format: 1, tone: good }
+      - id: anim
+        widget: Animation
+        region: top
+        props:
+          src: [assets/anim/freemium-funnel.webm, assets/anim/freemium-funnel.mp4]
+          poster: assets/anim/freemium-funnel.poster.jpg
+          alt: |
+            Little listeners stream into the wide top of a glowing funnel, which splits into two exits: free with ads, and
+            Premium at 9.99 dollars a month. Counters show 50 million active and 12.5 million paying. A badge then reads "1 in 4,
+            25%", and twelve month squares light up for 9.99 dollars times 12 months. Last, coins pour into a gold bar that
+            counts up to 1,498.5 million dollars a year.
+          start: '@animFrom'
+          end: '@animTo'
+          loop: false
+          stills: [0.7, 1.3, 2.3, 3.5, 4.9]
+    beats:
+      - say: |
+          Spotify uses **freemium**: a free basic version with ads and a paid better version. The free tier is a funnel. It
+          attracts listeners and competes with piracy, while some of them move to the paid plan.
+        define: [freemium]
+      - say: |
+          A **premium subscription** costs 9.99 dollars a month and removes ads and adds offline listening.
+          **Ad-supported streaming** is the free version, paid for by ads between songs.
+        define: [premium-subscription, ad-supported-streaming]
+        set: { animFrom: 0.8, animTo: 1.4 }
+      - say: |
+          The **conversion rate** is the share of users who pay. In November 2014 Spotify had 50 million active users and
+          12.5 million paying subscribers.
+        define: [conversion-rate]
+        set: { animFrom: 1.4, animTo: 2.4 }
+        gate:
+          type: predict
+          question: What share of active users paid? (Enter a decimal like 0.25 or a percentage like 25%.)
+          answer: { value: 0.25, tol: 0.005, percent: true }
+          explain: 12.5 ÷ 50 = 0.25, one in four (25%).
+      - say: |
+          One in four active users (25%) paid for Premium. Those 12.5 million subscribers each pay 9.99 dollars a month.
+        set: { animFrom: 2.4, animTo: 3.6 }
+        hide: [r1-in]
+        show: [r1, r2-in]
+        gate:
+          type: predict
+          question: How much revenue do 12.5 million subscribers bring in over a 12-month year, in millions of dollars?
+          answer: { value: 1498.5, tol: 0.5 }
+          explain: 12.5 × 9.99 × 12 = 1,498.5 million dollars.
+      - say: |
+          12.5 million subscribers paying 9.99 dollars for 12 months generate 1,498.5 million dollars a year. Try a
+          conversion calculation on new numbers.
+        set: { animFrom: 3.6, animTo: 5 }
+        hide: [r1, r2-in]
+        show: [r2]
+        gate:
+          type: practice
+          template: conversion-numeric
+      - say: And a revenue question.
+        hide: [anim]
+        gate:
+          type: practice
+          template: sub-revenue-numeric
+    takeaway: Free listeners are a funnel to paying subscribers, and revenue is subscribers times price times months.
+
+  - id: who-gets-paid
+    title: Who gets paid when you press play
+    goal: When a song is played, how does the money get from the listener to the artist?
+    skills: [royalty-model]
+    state: { revenue: 100, payoutRate: 0.7, streamShare: 0.05, artistCut: 0.2, payout: 500000, perStream: 0.007, animFrom: 0, animTo: 1.0 }
+    derive:
+      - { fn: royaltyPayout, in: { revenue: '@revenue', payoutRate: '@payoutRate', streamShare: '@streamShare', artistCut: '@artistCut' }, out: p }
+      - { fn: streamsFor, in: { payout: '@payout', perStream: '@perStream' }, out: n }
+    stage:
+      - id: r1
+        widget: Readout
+        hidden: true
+        props:
+          items:
+            - { label: Revenue (millions), value: '@revenue' }
+            - { label: Pool for rights holders, value: '@p.pool', tone: accent }
+            - { label: One rights holder gets, value: '@p.holder', tone: accent }
+            - { label: The artist gets, value: '@p.artist', tone: good }
+      - id: r2-in
+        widget: Readout
+        hidden: true
+        props:
+          items:
+            - { label: Payout (dollars), value: '@payout' }
+            - { label: Pay per stream (dollars), value: '@perStream', format: 4 }
+      - id: r2
+        widget: Readout
+        hidden: true
+        props:
+          items:
+            - { label: Payout (dollars), value: '@payout' }
+            - { label: Pay per stream (dollars), value: '@perStream', format: 4 }
+            - { label: Streams, value: '@n.streams', format: 0, tone: good }
+      - id: sh
+        widget: Slider
+        region: side
+        hidden: true
+        props: { label: Rights holder's share of streams (0.05 = 5%), min: 0.01, max: 0.2, step: 0.01 }
+        bind: { value: streamShare }
+      - id: anim
+        widget: Animation
+        region: top
+        props:
+          src: [assets/anim/follow-the-money.webm, assets/anim/follow-the-money.mp4]
+          poster: assets/anim/follow-the-money.poster.jpg
+          alt: |
+            Listeners pay 100 million into a channel. 30% branches off to the streaming service, leaving a 70-million pool shared
+            by many rights holders; a 5% slice flows to a record label (3.5 million) and a thin 20% trickle reaches the artist
+            (0.7 million).
+          start: '@animFrom'
+          end: '@animTo'
+          loop: false
+          stills: [1.0, 2.0, 3.6, 6]
+    beats:
+      - say: |
+          A **rights holder** owns a recording or song, such as a label or publisher, and is paid when it is played. A
+          **royalty** is a share of the money earned from a song, paid to its owners and creators.
+        define: [rights-holder, royalty]
+      - say: |
+          Spotify uses **revenue sharing**: it pays about 70% of its revenue to rights holders and keeps about 30%. Each
+          holder's part is proportional to its share of all streams. Suppose Spotify collects 100 million dollars in a month.
+        define: [revenue-sharing]
+        gate:
+          type: predict
+          question: Out of 100 million dollars in revenue, how large is the royalty pool for rights holders (millions)?
+          answer: { value: 70, tol: 0.05 }
+          explain: 70% of 100 million is 70 million.
+      - say: |
+          The artist is paid by the label. An **advance** is money paid up front that the label recovers from royalties
+          before paying more. Most artists get 15% to 20% of what the label receives. Now raise the label's share of streams.
+        define: [advance]
+        set: { animFrom: 1.0, animTo: 6 }
+        show: [r1, sh]
+        gate:
+          type: when
+          prompt: Raise the share of streams until the rights holder gets more than 6 million.
+          when: 'p.holder > 6'
+          hint: A 10% share of the 70 million pool is 7 million.
+      - say: |
+          Spotify reported average payouts of between 0.006 and 0.008 dollars per stream. The **per-stream payout** is that
+          small amount paid for each play. It turns a dollar payout into a number of plays.
+        define: [per-stream-payout]
+        hide: [r1, sh, anim]
+        show: [r2-in]
+        gate:
+          type: predict
+          question: At 0.007 dollars per stream, about how many streams does it take to generate a 500,000-dollar monthly payout?
+          options:
+            - About 71.4 million streams
+            - About 3.5 million streams
+            - About 7.1 million streams
+            - About 500,000 streams
+          answer: 0
+          explain: 500,000 ÷ 0.007 ≈ 71,428,571 streams.
+      - say: A pass at the rights holder's share.
+        hide: [r2-in]
+        show: [r2]
+        gate:
+          type: practice
+          template: holder-numeric
+      - say: And a streams question.
+        gate:
+          type: practice
+          template: streams-numeric
+    takeaway: About 70% of revenue goes to rights holders by share of streams, and artists receive a cut of that.
+
+  - id: streams-versus-sales
+    title: Streams against sales
+    goal: Why do some artists feel that streaming pays too little compared with selling songs?
+    skills: [streams-vs-sales]
+    state: { price: 0.99, retailerCut: 0.3, perStream: 0.007 }
+    derive:
+      - { fn: downloadVsStream, in: { price: '@price', retailerCut: '@retailerCut', perStream: '@perStream' }, out: d }
+    stage:
+      - id: r-in
+        widget: Readout
+        props:
+          items:
+            - { label: Download price, value: '@price' }
+            - { label: Retailer cut, value: '{=retailerCut|pct}' }
+            - { label: Pay per stream, value: '@perStream', format: 4 }
+      - id: r
+        widget: Readout
+        hidden: true
+        props:
+          items:
+            - { label: Download price, value: '@price' }
+            - { label: Label gets, value: '@d.net', format: 3, tone: accent }
+            - { label: Pay per stream, value: '@perStream', format: 4 }
+            - { label: Streams to match, value: '@d.streams', format: 1, tone: good }
+      - id: ps
+        widget: Slider
+        region: side
+        hidden: true
+        props: { label: Pay per stream (dollars), min: 0.004, max: 0.01, step: 0.001 }
+        bind: { value: perStream }
+    beats:
+      - say: |
+          A song sold on iTunes costs 0.99 dollars. The retailer keeps 30% and the label gets 70%. Compare that with a stream
+          that pays well under one cent.
+        gate:
+          type: predict
+          question: How much does the label get from one 0.99 dollar download?
+          answer: { value: 0.693, tol: 0.005 }
+          explain: 0.99 × 0.70 = 0.693 dollars.
+      - say: |
+          At 0.007 dollars per stream, it takes 99 streams ($0.693 \div 0.007$) to match one download. Change the pay per
+          stream and watch how the break-even play count moves.
+        hide: [r-in]
+        show: [r, ps]
+        gate:
+          type: when
+          prompt: Raise the pay per stream until fewer than 90 streams match a download.
+          when: 'd.streams < 90'
+          hint: Try 0.008.
+      - say: Another sale on new numbers.
+        hide: [ps]
+        gate:
+          type: practice
+          template: stream-equiv-numeric
+      - say: A thought to finish.
+        gate:
+          type: reflect
+          prompt: If streaming pays less per play, why would an artist still want to be on Spotify?
+          model: |
+            Streams reach far more listeners, help new artists find fans, and bring in income every time a song is played
+            instead of once per sale. Ed Sheeran said his sold-out tours depended on that exposure. The trade-off is lower pay
+            per play.
+    takeaway: About a hundred streams earn what one download earns, but streams reach many more people.
+
+  - id: the-swift-takedown
+    title: When a superstar pulls out
+    goal: What should a platform do when its biggest star asks for special treatment?
+    skills: [swift-takedown]
+    state: { part: 6, whole: 1000, payout: 500000, perStream: 0.007, animFrom: 0, animTo: 3.4 }
+    derive:
+      - { fn: shareOf, in: { part: '@part', whole: '@whole' }, out: s }
+      - { fn: streamsFor, in: { payout: '@payout', perStream: '@perStream' }, out: n }
+    stage:
+      - id: r1-in
+        widget: Readout
+        props:
+          items:
+            - { label: Swift's payout (millions per year), value: '@part' }
+            - { label: Spotify royalties (millions per year), value: '@whole' }
+      - id: r1
+        widget: Readout
+        hidden: true
+        props:
+          items:
+            - { label: Swift's payout (millions per year), value: '@part' }
+            - { label: Spotify royalties (millions per year), value: '@whole' }
+            - { label: Swift's share, value: '{=s.share|pct1}', tone: good }
+      - id: takedown-note
+        widget: Callout
+        hidden: true
+        props:
+          kind: note
+          title: The 1989 clash (November 2014)
+          body: |
+            - **Big Machine's demands:** Restrict *1989* to paying Premium subscribers only (windowing) and block it in the United States.
+            - **Spotify's policy:** Universal catalogue across both the free ad-supported funnel and Premium in every country.
+            - **Result:** Big Machine ordered a full **catalogue takedown**, pulling all of Taylor Swift's albums from Spotify.
+      - id: anim
+        widget: Animation
+        region: top
+        props:
+          src: [assets/anim/windowing-vs-day-and-date.webm, assets/anim/windowing-vs-day-and-date.mp4]
+          poster: assets/anim/windowing-vs-day-and-date.poster.jpg
+          alt: |
+            Two rows of three doors: Album, Premium and Free. In the day-and-date row all three open at once, most listeners take
+            the Free door and the album-sales bar barely grows. In the windowing row the Free door is padlocked for a while,
+            listeners take Album and Premium, and the album-sales bar grows tall. Then a teal stamp reading "Same for everyone"
+            lands on the day-and-date row, and three album cards slide off their shelf: the catalogue is pulled.
+          start: '@animFrom'
+          end: '@animTo'
+          loop: false
+          stills: [1.6, 3.3, 4.9]
+    beats:
+      - say: |
+          Before a new album, labels often use **windowing**: keeping new music off some services for a while to push sales
+          elsewhere first. By late 2014 most new music used **day-and-date release**, the same day on every channel.
+        define: [windowing, day-and-date-release]
+      - say: |
+          Big Machine Records asked for 1989 to be paid-only and kept out of the US. Spotify said no, and the label ordered a
+          **catalogue takedown**: a request to remove an artist's whole library from a service.
+        define: [catalogue-takedown]
+        set: { animFrom: 3.4, animTo: 5 }
+        gate:
+          type: predict
+          question: Swift was on track to earn about 6 million dollars from Spotify in 2014, out of about 1 billion dollars of royalties. What share is that? (Enter a decimal like 0.006 or a percentage like 0.6%.)
+          answer: { value: 0.006, tol: 0.0005, percent: true }
+          explain: 6 ÷ 1,000 = 0.006, which is 0.6%.
+      - say: |
+          Swift accounted for about 0.6% of Spotify's annual royalty pool (about 500,000 dollars a month, or 71 million
+          streams a month at 0.007 dollars per stream)—small in direct dollars, but huge as a precedent for other stars.
+        hide: [r1-in, anim]
+        show: [r1, takedown-note]
+      - say: Check the release terms from this scene.
+        gate:
+          type: practice
+          template: windowing-match
+      - say: Now the decision itself.
+        gate:
+          type: reflect
+          prompt: Should Spotify change its policy of the same music everywhere and a free tier for all, to keep stars like Swift?
+          model: |
+            Giving in could keep a superstar and stop a domino effect, but it would break the promise that makes the service work
+            for everyone and could push listeners back to piracy. A middle path might offer short paid-only windows. Swift is
+            only about 0.6% of payouts, so the larger risk is other artists copying her.
+    takeaway: A single star is a small part of Spotify's payouts, but her move tests the rules of the whole platform.

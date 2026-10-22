@@ -27,12 +27,11 @@ export function GlossaryPage() {
         <input className="input w-64" placeholder="Search terms…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
         <select className="input" value={mod} onChange={(e) => setMod(e.target.value)} aria-label="Filter by course or module">
           <option value="all">{multi ? 'All courses' : 'All modules'}</option>
-          {courses.map((g) => (
-            <optgroup key={g.course} label={g.course}>
-              <option value={`course:${g.course}`}>All {g.course} modules</option>
-              {g.modules.filter((e) => mods.some((m) => m.id === e.id)).map((e) => <option key={e.id} value={e.id}>{e.shortTitle}</option>)}
-            </optgroup>
-          ))}
+          {/* the course row itself selects the whole course; its modules are indented under it */}
+          {courses.flatMap((g) => [
+            <option key={g.course} value={`course:${g.course}`} className="font-semibold">{g.course}</option>,
+            ...g.modules.filter((e) => mods.some((m) => m.id === e.id)).map((e) => <option key={e.id} value={e.id}>{' '}{e.shortTitle}</option>),
+          ])}
         </select>
       </div>
       <div className="text-xs text-muted">{shown.length} terms · glossary questions are added to quizzes automatically</div>
